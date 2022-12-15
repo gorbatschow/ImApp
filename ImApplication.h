@@ -21,7 +21,7 @@ private:
   int _displayW{}, _displayH{};
   ImVec4 _clearColor{0.45f, 0.55f, 0.60f, 1.00f};
 
-  int init();
+  void init();
   void loop();
   void quit();
 

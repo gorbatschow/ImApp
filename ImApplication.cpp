@@ -17,14 +17,13 @@
 // io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset' and handle
 // ImDrawCmd::VtxOffset #define ImDrawIdx unsigned int
 
-ImApplication::ImApplication(const std::string &title) : _windowTitle(title) {}
+ImApplication::ImApplication(const std::string &title) : _windowTitle(title) {
+  init();
+}
 // -----------------------------------------------------------------------------
 ImApplication::~ImApplication() {}
 // -----------------------------------------------------------------------------
 int ImApplication::run() {
-  const auto initStatus = init();
-  if (initStatus != 0)
-    return initStatus;
   beforeLoop();
   loop();
   beforeQuit();
@@ -40,11 +39,11 @@ void ImApplication::paint() {
   ImGui::End();
 }
 // -----------------------------------------------------------------------------
-int ImApplication::init() {
+void ImApplication::init() {
   // Setup window
   glfwSetErrorCallback(onGlfwError);
   if (glfwInit() == 0) {
-    return 1;
+    return;
   }
 
 // Decide GL+GLSL versions
@@ -73,7 +72,7 @@ int ImApplication::init() {
   // Create window with graphics context
   _glfwWindow = glfwCreateWindow(1280, 720, _windowTitle.c_str(), NULL, NULL);
   if (_glfwWindow == NULL)
-    return 1;
+    return;
   glfwMakeContextCurrent(_glfwWindow);
   glfwSwapInterval(1); // Enable vsync
 
@@ -113,8 +112,6 @@ int ImApplication::init() {
   ImGui::GetIO().Fonts->AddFontFromMemoryTTF(
       Roboto_Regular_ttf, Roboto_Regular_ttf_len, std::round(16), &font_cfg,
       ImGui::GetIO().Fonts->GetGlyphRangesCyrillic());
-
-  return 0;
 }
 // -----------------------------------------------------------------------------
 void ImApplication::loop() {
