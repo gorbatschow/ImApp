@@ -125,9 +125,13 @@ void ImApplication::loop() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    // ImGui docking
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(),
-                                 ImGuiDockNodeFlags_PassthruCentralNode);
+    // Docking
+    constexpr ImGuiDockNodeFlags dockSpaceFlags =
+        ImGuiDockNodeFlags_PassthruCentralNode;
+    _dockSpaceId =
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockSpaceFlags);
+
+    // Paint GUI
     paint();
 
     // Rendering
