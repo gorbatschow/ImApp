@@ -180,4 +180,31 @@ template <> inline void SpinBox<int>::paintSpinBox() {
   _changed = ImGui::InputInt(_label.c_str(), &_currValue);
 }
 
+// Slider
+// -----------------------------------------------------------------------------
+template <class T> class Slider : public ValueElement<T> {
+public:
+  // Constructor
+  Slider(const std::string &label = {}) : ValueElement<T>(label) {}
+  // Destructor
+  virtual ~Slider() override {}
+  // Value limits setter
+  inline void setValueLimits(const std::pair<T, T> &limits) {
+    _limits = limits;
+  }
+
+protected:
+  virtual void paintElement() override { paintSlider(); }
+
+  std::pair<T, T> _limits{std::numeric_limits<T>::min() / 2,
+                          std::numeric_limits<T>::max() / 2};
+
+  void paintSlider() {}
+};
+
+template <> inline void Slider<int>::paintSlider() {
+  _changed = ImGui::SliderInt(_label.c_str(), &_currValue, _limits.first,
+                              _limits.second);
+}
+
 } // namespace ImWrap
