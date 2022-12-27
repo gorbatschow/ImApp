@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cmath>
 #include <imgui.h>
 #include <limits>
@@ -11,10 +12,11 @@ namespace ImWrap {
 // -----------------------------------------------------------------------------
 class BasicElement {
 public:
-  BasicElement() {}
-
+  // Constructor
+  BasicElement(const std::string &label = {}) : _label{label} {}
+  // Destructor
   virtual ~BasicElement() {}
-
+  // Painter
   virtual void paint() {
     ImGui::PushID(this);
     if (!std::isnan(_width))
@@ -22,9 +24,9 @@ public:
     paintElement();
     ImGui::PopID();
   }
-
+  // Handler
   virtual bool handle() { return false; }
-
+  // Width setter
   inline void setWidth(const float &w) { _width = w; }
 
 protected:
@@ -38,18 +40,18 @@ protected:
 // -----------------------------------------------------------------------------
 template <class T> class ValueElement : public BasicElement {
 public:
-  ValueElement() {}
-
+  // Constructor
+  ValueElement(const std::string &label = {}) : BasicElement(label) {}
+  // Destructor
   virtual ~ValueElement() override {}
-
-  virtual void setCurrValue(const T &value) { _currValue = value; }
-
+  // Handler
   virtual bool handle() const {
     const auto changed = _changed;
     _changed = false;
     return changed;
   }
-
+  // Current value setter
+  virtual void setCurrValue(const T &value) { _currValue = value; }
   inline const T &currValue() const { return _currValue; }
 
 protected:
@@ -63,8 +65,9 @@ protected:
 // -----------------------------------------------------------------------------
 class Label : public BasicElement {
 public:
-  Label(const std::string &label) { _label = label; }
-
+  // Constructor
+  Label(const std::string &label = {}) : BasicElement(label) {}
+  // Destructor
   virtual ~Label() override {}
 
 protected:
@@ -75,10 +78,11 @@ protected:
 // -----------------------------------------------------------------------------
 class Button : public BasicElement {
 public:
-  Button(const std::string &label) { _label = label; }
-
+  // Constructor
+  Button(const std::string &label = {}) : BasicElement(label) {}
+  // Destructor
   virtual ~Button() override {}
-
+  // Handler
   virtual bool handle() override {
     const bool trig = _triggered;
     _triggered = false;
@@ -97,12 +101,11 @@ protected:
 // -----------------------------------------------------------------------------
 template <class T> class Combo : public ValueElement<T> {
 public:
-  Combo() {}
-
-  Combo(const std::string &label) { ValueElement<T>::_label = label; }
-
+  // Constructor
+  Combo(const std::string &label = {}) : ValueElement<T>(label) {}
+  // Destructor
   virtual ~Combo() override {}
-
+  // Current value setter
   virtual void setCurrValue(const T &value) override {
     for (size_t i = 0; i != _valueList.size(); ++i) {
       if (_valueList[i].first == value) {
@@ -136,10 +139,9 @@ protected:
 // -----------------------------------------------------------------------------
 class CheckBox : public ValueElement<bool> {
 public:
-  CheckBox() {}
-
-  CheckBox(const std::string &label) { _label = label; }
-
+  // Constructor
+  CheckBox(const std::string &label = {}) : ValueElement<bool>(label) {}
+  // Destructor
   virtual ~CheckBox() override {}
 
 protected:
@@ -152,15 +154,11 @@ protected:
 // -----------------------------------------------------------------------------
 template <class T> class SpinBox : public ValueElement<T> {
 public:
-  SpinBox() {}
-
-  SpinBox(const std::string &label) {
-    ValueElement<T>::_currValue = {};
-    ValueElement<T>::_label = label;
-  }
-
+  // Constructor
+  SpinBox(const std::string &label = {}) : ValueElement<T>(label) {}
+  // Destructor
   virtual ~SpinBox() override {}
-
+  // Value limits setter
   inline void setValueLimits(const std::pair<T, T> &limits) {
     _limits = limits;
   }
@@ -168,15 +166,10 @@ public:
 protected:
   virtual void paintElement() override {
     paintSpinBox();
-    ValueElement<T>::_currValue = ValueElement<T>::_currValue > _limits.first
-                                      ? ValueElement<T>::_currValue
-                                      : _limits.first;
-    ValueElement<T>::_currValue = ValueElement<T>::_currValue < _limits.second
-                                      ? ValueElement<T>::_currValue
-                                      : _limits.second;
+    ValueElement<T>::_currValue =
+        std::clamp(ValueElement<T>::_currValue, _limits.first, _limits.second);
   }
 
-private:
   std::pair<T, T> _limits{std::numeric_limits<T>::min(),
                           std::numeric_limits<T>::max()};
 
