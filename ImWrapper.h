@@ -129,10 +129,11 @@ public:
 
 protected:
   std::vector<std::pair<T, std::string>> _valueList;
-  int _currIndex{-1};
+  int _currIndex{0};
   std::string _placeholder{};
 
   virtual void paintElement() override {
+    _currIndex = _valueList.empty() ? -1 : _currIndex;
     if (_currIndex < 0) {
       if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
                             _placeholder.c_str())) {
