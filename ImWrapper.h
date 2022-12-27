@@ -121,6 +121,7 @@ public:
   void setValueList(const std::vector<std::pair<T, std::string>> &valueList) {
     _valueList = valueList;
     _currIndex = std::clamp<T>(_currIndex, 0, _valueList.size() - 1);
+    _currIndex = _valueList.empty() ? -1 : _currIndex;
   }
 
   inline void setPlaceHolder(const std::string &text) { _placeholder = text; }
