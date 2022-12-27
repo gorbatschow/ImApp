@@ -12,6 +12,7 @@ namespace ImWrap {
 class BasicElement {
 public:
   BasicElement() {}
+
   virtual ~BasicElement() {}
 
   virtual void paint() {
@@ -23,13 +24,14 @@ public:
   }
 
   virtual bool handle() { return false; }
+
   inline void setWidth(const float &w) { _width = w; }
 
 protected:
-  virtual void paintElement() {}
-
   float _width{std::numeric_limits<float>::quiet_NaN()};
   std::string _label{"##"};
+
+  virtual void paintElement() {}
 };
 
 // ValueElement
@@ -37,8 +39,8 @@ protected:
 template <class T> class ValueElement : public BasicElement {
 public:
   ValueElement() {}
+
   virtual ~ValueElement() override {}
-  virtual void paintElement() override {}
 
   virtual void setCurrValue(const T &value) { _currValue = value; }
 
@@ -51,8 +53,10 @@ public:
   inline const T &currValue() const { return _currValue; }
 
 protected:
-  T _currValue;
+  T _currValue{};
   mutable bool _changed{false};
+
+  virtual void paintElement() override {}
 };
 
 // Label
@@ -63,6 +67,7 @@ public:
 
   virtual ~Label() override {}
 
+protected:
   virtual void paintElement() override { ImGui::Text("%s", _label.c_str()); }
 };
 
@@ -74,10 +79,6 @@ public:
 
   virtual ~Button() override {}
 
-  virtual void paintElement() override {
-    _triggered = ImGui::Button(_label.c_str());
-  }
-
   virtual bool handle() override {
     const bool trig = _triggered;
     _triggered = false;
@@ -86,6 +87,10 @@ public:
 
 protected:
   bool _triggered{false};
+
+  virtual void paintElement() override {
+    _triggered = ImGui::Button(_label.c_str());
+  }
 };
 
 // Combo
@@ -97,20 +102,6 @@ public:
   Combo(const std::string &label) { ValueElement<T>::_label = label; }
 
   virtual ~Combo() override {}
-
-  virtual void paintElement() override {
-    if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
-                          _valueList[_currIndex].second.c_str())) {
-      for (size_t i = 0; i != _valueList.size(); ++i) {
-        if (ImGui::Selectable(_valueList[i].second.c_str(), i == _currIndex)) {
-          _currIndex = i;
-          ValueElement<T>::_currValue = _valueList[i].first;
-          ValueElement<T>::_changed = true;
-        }
-      }
-      ImGui::EndCombo();
-    }
-  }
 
   virtual void setCurrValue(const T &value) override {
     for (size_t i = 0; i != _valueList.size(); ++i) {
@@ -125,6 +116,20 @@ public:
 protected:
   std::vector<std::pair<T, std::string>> _valueList;
   size_t _currIndex{0};
+
+  virtual void paintElement() override {
+    if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
+                          _valueList[_currIndex].second.c_str())) {
+      for (size_t i = 0; i != _valueList.size(); ++i) {
+        if (ImGui::Selectable(_valueList[i].second.c_str(), i == _currIndex)) {
+          _currIndex = i;
+          ValueElement<T>::_currValue = _valueList[i].first;
+          ValueElement<T>::_changed = true;
+        }
+      }
+      ImGui::EndCombo();
+    }
+  }
 };
 
 // CheckBox
@@ -140,6 +145,7 @@ public:
 
   virtual ~CheckBox() override {}
 
+protected:
   virtual void paintElement() override {
     _changed = ImGui::Checkbox(_label.c_str(), &_currValue);
   }
@@ -158,7 +164,12 @@ public:
 
   virtual ~SpinBox() override {}
 
-  void paintElement() override {
+  inline void setValueLimits(const std::pair<T, T> &limits) {
+    _limits = limits;
+  }
+
+protected:
+  virtual void paintElement() override {
     paintSpinBox();
     ValueElement<T>::_currValue = ValueElement<T>::_currValue > _limits.first
                                       ? ValueElement<T>::_currValue
@@ -166,10 +177,6 @@ public:
     ValueElement<T>::_currValue = ValueElement<T>::_currValue < _limits.second
                                       ? ValueElement<T>::_currValue
                                       : _limits.second;
-  }
-
-  inline void setValueLimits(const std::pair<T, T> &limits) {
-    _limits = limits;
   }
 
 private:
