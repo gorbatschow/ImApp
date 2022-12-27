@@ -102,7 +102,9 @@ protected:
 template <class T> class Combo : public ValueElement<T> {
 public:
   // Constructor
-  Combo(const std::string &label = {}) : ValueElement<T>(label) {}
+  Combo(const std::string &label = {},
+        const std::vector<std::pair<T, std::string>> &valueList = {})
+      : ValueElement<T>(label), _valueList(valueList) {}
   // Destructor
   virtual ~Combo() override {}
   // Current value setter
@@ -115,22 +117,38 @@ public:
       }
     }
   }
+  // Value list setter
+  void setValueList(const std::vector<std::pair<T, std::string>> &valueList) {
+    _valueList = valueList;
+    _currIndex = std::clamp<T>(_currIndex, 0, _valueList.size() - 1);
+  }
+
+  inline void setPlaceHolder(const std::string &text) { _placeholder = text; }
 
 protected:
   std::vector<std::pair<T, std::string>> _valueList;
-  size_t _currIndex{0};
+  int _currIndex{-1};
+  std::string _placeholder{};
 
   virtual void paintElement() override {
-    if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
-                          _valueList[_currIndex].second.c_str())) {
-      for (size_t i = 0; i != _valueList.size(); ++i) {
-        if (ImGui::Selectable(_valueList[i].second.c_str(), i == _currIndex)) {
-          _currIndex = i;
-          ValueElement<T>::_currValue = _valueList[i].first;
-          ValueElement<T>::_changed = true;
-        }
+    if (_currIndex < 0) {
+      if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
+                            _placeholder.c_str())) {
+        ImGui::EndCombo();
       }
-      ImGui::EndCombo();
+    } else {
+      if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
+                            _valueList.at(_currIndex).second.c_str())) {
+        for (size_t i = 0; i != _valueList.size(); ++i) {
+          if (ImGui::Selectable(_valueList[i].second.c_str(),
+                                i == _currIndex)) {
+            _currIndex = i;
+            ValueElement<T>::_currValue = _valueList[i].first;
+            ValueElement<T>::_changed = true;
+          }
+        }
+        ImGui::EndCombo();
+      }
     }
   }
 };
@@ -166,8 +184,8 @@ public:
 protected:
   virtual void paintElement() override {
     paintSpinBox();
-    ValueElement<T>::_currValue =
-        std::clamp(ValueElement<T>::_currValue, _limits.first, _limits.second);
+    ValueElement<T>::_currValue = std::clamp<T>(ValueElement<T>::_currValue,
+                                                _limits.first, _limits.second);
   }
 
   std::pair<T, T> _limits{std::numeric_limits<T>::min(),
