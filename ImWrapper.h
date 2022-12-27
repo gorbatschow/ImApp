@@ -102,8 +102,9 @@ protected:
 template <class T> class Combo : public ValueElement<T> {
 public:
   // Constructor
-  Combo(const std::string &label = {},
-        const std::vector<std::pair<T, std::string>> &valueList = {})
+  Combo(const std::string &label = {}) : ValueElement<T>(label) {}
+  Combo(const std::string &label,
+        const std::vector<std::pair<T, std::string>> &valueList)
       : ValueElement<T>(label), _valueList(valueList) {}
   // Destructor
   virtual ~Combo() override {}
