@@ -136,12 +136,9 @@ protected:
 // -----------------------------------------------------------------------------
 class CheckBox : public ValueElement<bool> {
 public:
-  CheckBox() { _currValue = false; }
+  CheckBox() {}
 
-  CheckBox(const std::string &label) {
-    _label = label;
-    _currValue = false;
-  }
+  CheckBox(const std::string &label) { _label = label; }
 
   virtual ~CheckBox() override {}
 
@@ -155,7 +152,7 @@ protected:
 // -----------------------------------------------------------------------------
 template <class T> class SpinBox : public ValueElement<T> {
 public:
-  SpinBox() { ValueElement<T>::_currValue = {}; }
+  SpinBox() {}
 
   SpinBox(const std::string &label) {
     ValueElement<T>::_currValue = {};
@@ -189,4 +186,5 @@ private:
 template <> inline void SpinBox<int>::paintSpinBox() {
   _changed = ImGui::InputInt(_label.c_str(), &_currValue);
 }
+
 } // namespace ImWrap
