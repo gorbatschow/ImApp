@@ -28,6 +28,8 @@ public:
   virtual bool handle() { return false; }
   // Width setter
   inline void setWidth(const float &w) { _width = w; }
+  // Label setter
+  inline void setLabel(const std::string &label) { _label = label; }
 
 protected:
   float _width{std::numeric_limits<float>::quiet_NaN()};
