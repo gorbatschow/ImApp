@@ -203,6 +203,54 @@ template <> inline void SpinBox<int>::paintSpinBox() {
   _changed = ImGui::InputInt(_label.c_str(), &_currValue);
 }
 
+// SpinBox2
+// -----------------------------------------------------------------------------
+template <class T> class SpinBoxAB : public ValueElement<std::array<T, 2>> {
+public:
+  // Constructor
+  SpinBoxAB(const std::string &label = {})
+      : ValueElement<std::array<T, 2>>(label) {}
+  // Destructor
+  virtual ~SpinBoxAB() override {}
+  // Value A limits setter
+  inline void setValueLimitsA(const std::pair<T, T> &limits) {
+    _limitsA = limits;
+  }
+  // Value B limits setter
+  inline void setValueLimitsB(const std::pair<T, T> &limits) {
+    _limitsB = limits;
+  }
+
+protected:
+  virtual void paintElement() override {
+    paintSpinBox();
+    ValueElement<std::array<T, 2>>::_currValue[0] =
+        std::clamp<T>(ValueElement<std::array<T, 2>>::_currValue[0],
+                      _limitsA.first, _limitsA.second);
+    ValueElement<std::array<T, 2>>::_currValue[1] =
+        std::clamp<T>(ValueElement<std::array<T, 2>>::_currValue[1],
+                      _limitsB.first, _limitsB.second);
+  }
+
+  std::pair<T, T> _limitsA{std::numeric_limits<T>::min(),
+                           std::numeric_limits<T>::max()};
+
+  std::pair<T, T> _limitsB{std::numeric_limits<T>::min(),
+                           std::numeric_limits<T>::max()};
+
+  void paintSpinBox() {}
+};
+
+template <> inline void SpinBoxAB<int>::paintSpinBox() {
+  int step = 1;
+  int step_fast = 100;
+  ImGuiInputTextFlags flags = 0;
+  ImGui::InputScalarN(_label.c_str(), ImGuiDataType_S32,
+                      (void *)_currValue.data(), 2,
+                      (void *)(step > 0 ? &step : NULL),
+                      (void *)(step_fast > 0 ? &step_fast : NULL), NULL, flags);
+}
+
 // Slider
 // -----------------------------------------------------------------------------
 template <class T> class Slider : public ValueElement<T> {
