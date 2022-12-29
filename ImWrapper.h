@@ -38,27 +38,44 @@ protected:
   virtual void paintElement() {}
 };
 
-// ValueElement
+// IValueElement
 // -----------------------------------------------------------------------------
-template <class T> class ValueElement : public BasicElement {
+template <class T> class IValueElement : public BasicElement {
 public:
   // Constructor
-  ValueElement(const std::string &label = {}) : BasicElement(label) {}
+  IValueElement(const std::string &label = {}) : BasicElement(label) {}
   // Destructor
-  virtual ~ValueElement() override {}
+  virtual ~IValueElement() override {}
   // Handler
   virtual bool handle() const {
-    const auto changed = _changed;
+    const auto changed{_changed};
     _changed = false;
     return changed;
   }
-  // Current value setter
-  virtual void setCurrValue(const T &value) { _currValue = value; }
-  inline const T &currValue() const { return _currValue; }
+  // Value setter
+  virtual void setCurrValue(const T &value) = 0;
+  // Value getter
+  virtual const T &currValue() const = 0;
+
+protected:
+  mutable bool _changed{false};
+};
+
+// ValueElement
+// -----------------------------------------------------------------------------
+template <class T> class ValueElement : public IValueElement<T> {
+public:
+  // Constructor
+  ValueElement(const std::string &label = {}) : IValueElement<T>(label) {}
+  // Destructor
+  virtual ~ValueElement() override {}
+  // Value setter
+  inline void setCurrValue(const T &value) override { _currValue = value; }
+  // Value getter
+  inline const T &currValue() const override final { return _currValue; }
 
 protected:
   T _currValue{};
-  mutable bool _changed{false};
 
   virtual void paintElement() override {}
 };
@@ -101,32 +118,38 @@ protected:
 
 // Combo
 // -----------------------------------------------------------------------------
-template <class T> class Combo : public ValueElement<T> {
+template <class T> class Combo : public IValueElement<T> {
 public:
   // Constructor
-  Combo(const std::string &label = {}) : ValueElement<T>(label) {}
+  Combo(const std::string &label = {}) : IValueElement<T>(label) {}
+  // Constructor
   Combo(const std::string &label,
         const std::vector<std::pair<T, std::string>> &valueList)
-      : ValueElement<T>(label), _valueList(valueList) {}
+      : IValueElement<T>(label), _valueList(valueList) {}
   // Destructor
   virtual ~Combo() override {}
-  // Current value setter
+  // Value setter
   virtual void setCurrValue(const T &value) override {
-    for (size_t i = 0; i != _valueList.size(); ++i) {
-      if (_valueList[i].first == value) {
+    _currIndex = 0;
+    for (int i = 0; i != _valueList.size(); ++i) {
+      if (_valueList.at(i).first == value) {
         _currIndex = i;
-        ValueElement<T>::_currValue = value;
         break;
       }
     }
   }
+  // Value getter
+  virtual const T &currValue() const override {
+    return _valueList.at(_currIndex).first;
+  }
   // Value list setter
-  void setValueList(const std::vector<std::pair<T, std::string>> &valueList) {
+  inline void
+  setValueList(const std::vector<std::pair<T, std::string>> &valueList) {
     _valueList = valueList;
     _currIndex = std::clamp<T>(_currIndex, 0, _valueList.size() - 1);
     _currIndex = _valueList.empty() ? -1 : _currIndex;
   }
-
+  // PLaceholder setter
   inline void setPlaceHolder(const std::string &text) { _placeholder = text; }
 
 protected:
@@ -137,19 +160,20 @@ protected:
   virtual void paintElement() override {
     _currIndex = _valueList.empty() ? -1 : _currIndex;
     if (_currIndex < 0) {
+      // Value list IS empty
       if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
                             _placeholder.c_str())) {
         ImGui::EndCombo();
       }
     } else {
+      // Value list is NOT empty
       if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
                             _valueList.at(_currIndex).second.c_str())) {
         for (size_t i = 0; i != _valueList.size(); ++i) {
           if (ImGui::Selectable(_valueList[i].second.c_str(),
                                 i == _currIndex)) {
             _currIndex = i;
-            ValueElement<T>::_currValue = _valueList[i].first;
-            ValueElement<T>::_changed = true;
+            IValueElement<T>::_changed = true;
           }
         }
         ImGui::EndCombo();
@@ -242,9 +266,9 @@ protected:
 };
 
 template <> inline void SpinBoxAB<int>::paintSpinBox() {
-  int step = 1;
-  int step_fast = 100;
-  ImGuiInputTextFlags flags = 0;
+  int step{1};
+  int step_fast{100};
+  ImGuiInputTextFlags flags{0};
   ImGui::InputScalarN(_label.c_str(), ImGuiDataType_S32,
                       (void *)_currValue.data(), 2,
                       (void *)(step > 0 ? &step : NULL),
