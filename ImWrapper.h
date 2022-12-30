@@ -20,6 +20,8 @@ public:
   // Painter
   virtual void paint() {
     ImGui::PushID(this);
+    if (_sameLine)
+      ImGui::SameLine();
     if (!std::isnan(_width))
       ImGui::SetNextItemWidth(_width);
     paintElement();
@@ -29,12 +31,18 @@ public:
   virtual bool handle() { return false; }
   // Width setter
   inline void setWidth(const float &w) { _width = w; }
+  inline float width() const { return _width; }
   // Label setter
   inline void setLabel(const std::string &label) { _label = label; }
+  inline const std::string &label() const { return _label; }
+  // SameLine setter
+  inline void setSameLine(bool sameLine) { _sameLine = sameLine; }
+  inline bool sameLine() const { return _sameLine; }
 
 protected:
   float _width{std::numeric_limits<float>::quiet_NaN()};
   std::string _label{"##"};
+  bool _sameLine{};
 
   virtual void paintElement() {}
 };
@@ -57,6 +65,8 @@ public:
   virtual void setCurrValue(const T &value) = 0;
   // Value getter
   virtual const T &currValue() const = 0;
+  // Function-style getter
+  inline const T &operator()() { return currValue(); }
 
 protected:
   mutable bool _changed{false};
