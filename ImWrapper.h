@@ -119,16 +119,16 @@ protected:
 
 // Combo
 // -----------------------------------------------------------------------------
-template <class T> class Combo : public IValueElement<T> {
+template <class T> class ComboBox : public IValueElement<T> {
 public:
   // Constructor
-  Combo(const std::string &label = {}) : IValueElement<T>(label) {}
+  ComboBox(const std::string &label = {}) : IValueElement<T>(label) {}
   // Constructor
-  Combo(const std::string &label,
-        const std::vector<std::pair<T, std::string>> &valueList)
+  ComboBox(const std::string &label,
+           const std::vector<std::pair<T, std::string>> &valueList)
       : IValueElement<T>(label), _valueList(valueList) {}
   // Destructor
-  virtual ~Combo() override {}
+  virtual ~ComboBox() override {}
   // Value setter
   virtual void setCurrValue(const T &value) override {
     _currIndex = 0;
