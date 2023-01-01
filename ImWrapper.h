@@ -21,7 +21,7 @@ public:
   virtual void paint() {
     ImGui::PushID(this);
     if (_sameLine)
-      ImGui::SameLine();
+      ImGui::SameLine(0.0f, _sameLineSpacing);
     if (!std::isnan(_width))
       ImGui::SetNextItemWidth(_width);
     paintElement();
@@ -38,11 +38,14 @@ public:
   // SameLine setter
   inline void setSameLine(bool sameLine) { _sameLine = sameLine; }
   inline bool sameLine() const { return _sameLine; }
+  inline void setSameLineSpacing(float s) { _sameLineSpacing = s; }
+  inline float sameLineSpacing() const { return _sameLineSpacing; }
 
 protected:
   float _width{std::numeric_limits<float>::quiet_NaN()};
   std::string _label{"##"};
   bool _sameLine{};
+  float _sameLineSpacing{-1.0f};
 
   virtual void paintElement() {}
 };
