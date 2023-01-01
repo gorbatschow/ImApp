@@ -65,11 +65,11 @@ public:
     return changed;
   }
   // Value setter
-  virtual void setCurrValue(const T &value) = 0;
+  virtual void setValue(const T &value) = 0;
   // Value getter
-  virtual const T &currValue() const = 0;
+  virtual const T &value() const = 0;
   // Function-style getter
-  inline const T &operator()() { return currValue(); }
+  inline const T &operator()() { return value(); }
 
 protected:
   mutable bool _changed{false};
@@ -84,14 +84,23 @@ public:
   // Destructor
   virtual ~ValueElement() override {}
   // Value setter
-  inline void setCurrValue(const T &value) override { _currValue = value; }
+  inline void setValue(const T &value) override {
+    _value = std::clamp(value, _valueLimits.first, _valueLimits.second);
+  }
   // Value getter
-  inline const T &currValue() const override final { return _currValue; }
+  inline const T &value() const override final { return _value; }
+  // Value limits setter
+  inline void setValueLimits(const std::pair<T, T> &limits) {
+    _valueLimits = limits;
+    setValue(_value);
+  }
+  // Value limits getter
+  inline const std::pair<T, T> &valueLimits() const { return _valueLimits; }
 
 protected:
-  T _currValue{};
-
-  virtual void paintElement() override {}
+  T _value{};
+  std::pair<T, T> _valueLimits{std::numeric_limits<T>::min(),
+                               std::numeric_limits<T>::max()};
 };
 
 // Label
@@ -104,7 +113,7 @@ public:
   virtual ~Label() override {}
 
 protected:
-  virtual void paintElement() override { ImGui::Text("%s", _label.c_str()); }
+  void paintElement() override final { ImGui::Text("%s", _label.c_str()); }
 };
 
 // Button
@@ -116,7 +125,7 @@ public:
   // Destructor
   virtual ~Button() override {}
   // Handler
-  virtual bool handle() override {
+  bool handle() override final {
     const bool trig = _triggered;
     _triggered = false;
     return trig;
@@ -125,7 +134,7 @@ public:
 protected:
   bool _triggered{false};
 
-  virtual void paintElement() override {
+  void paintElement() override final {
     _triggered = ImGui::Button(_label.c_str());
   }
 };
@@ -143,7 +152,7 @@ public:
   // Destructor
   virtual ~ComboBox() override {}
   // Value setter
-  virtual void setCurrValue(const T &value) override {
+  void setValue(const T &value) override final {
     _currIndex = 0;
     for (int i = 0; i != _valueList.size(); ++i) {
       if (_valueList.at(i).first == value) {
@@ -153,7 +162,7 @@ public:
     }
   }
   // Value getter
-  virtual const T &currValue() const override {
+  const T &value() const override final {
     return _valueList.at(_currIndex).first;
   }
   // Value list setter
@@ -163,7 +172,7 @@ public:
     _currIndex = std::clamp<T>(_currIndex, 0, _valueList.size() - 1);
     _currIndex = _valueList.empty() ? -1 : _currIndex;
   }
-  // PLaceholder setter
+  // Placeholder setter
   inline void setPlaceHolder(const std::string &text) { _placeholder = text; }
 
 protected:
@@ -206,8 +215,11 @@ public:
   virtual ~CheckBox() override {}
 
 protected:
-  virtual void paintElement() override {
-    _changed = ImGui::Checkbox(_label.c_str(), &_currValue);
+  void paintElement() override final {
+    bool value{_value};
+    _changed = ImGui::Checkbox(_label.c_str(), &value);
+    if (_changed)
+      setValue(value);
   }
 };
 
@@ -219,26 +231,18 @@ public:
   SpinBox(const std::string &label = {}) : ValueElement<T>(label) {}
   // Destructor
   virtual ~SpinBox() override {}
-  // Value limits setter
-  inline void setValueLimits(const std::pair<T, T> &limits) {
-    _limits = limits;
-  }
 
 protected:
-  virtual void paintElement() override {
-    paintSpinBox();
-    ValueElement<T>::_currValue = std::clamp<T>(ValueElement<T>::_currValue,
-                                                _limits.first, _limits.second);
-  }
-
-  std::pair<T, T> _limits{std::numeric_limits<T>::min(),
-                          std::numeric_limits<T>::max()};
-
+  virtual void paintElement() override { paintSpinBox(); }
   void paintSpinBox() {}
 };
 
 template <> inline void SpinBox<int>::paintSpinBox() {
-  _changed = ImGui::InputInt(_label.c_str(), &_currValue);
+  int value{_value};
+  _changed = ImGui::InputInt(_label.c_str(), &value);
+  if (_changed) {
+    setValue(value);
+  }
 }
 
 // SpinBox2
@@ -252,29 +256,29 @@ public:
   virtual ~SpinBoxAB() override {}
   // Value A limits setter
   inline void setValueLimitsA(const std::pair<T, T> &limits) {
-    _limitsA = limits;
+    ValueElement<std::array<T, 2>>::_valueLimits.first[0] = limits.first;
+    ValueElement<std::array<T, 2>>::_valueLimits.second[0] = limits.second;
   }
   // Value B limits setter
   inline void setValueLimitsB(const std::pair<T, T> &limits) {
-    _limitsB = limits;
+    ValueElement<std::array<T, 2>>::_valueLimits.first[1] = limits.first;
+    ValueElement<std::array<T, 2>>::_valueLimits.second[1] = limits.second;
   }
 
 protected:
   virtual void paintElement() override {
     paintSpinBox();
-    ValueElement<std::array<T, 2>>::_currValue[0] =
-        std::clamp<T>(ValueElement<std::array<T, 2>>::_currValue[0],
-                      _limitsA.first, _limitsA.second);
-    ValueElement<std::array<T, 2>>::_currValue[1] =
-        std::clamp<T>(ValueElement<std::array<T, 2>>::_currValue[1],
-                      _limitsB.first, _limitsB.second);
+
+    ValueElement<std::array<T, 2>>::_value[0] =
+        std::clamp<T>(ValueElement<std::array<T, 2>>::_value[0],
+                      ValueElement<std::array<T, 2>>::_valueLimits.first[0],
+                      ValueElement<std::array<T, 2>>::_valueLimits.second[0]);
+
+    ValueElement<std::array<T, 2>>::_value[1] =
+        std::clamp<T>(ValueElement<std::array<T, 2>>::_value[1],
+                      ValueElement<std::array<T, 2>>::_valueLimits.first[1],
+                      ValueElement<std::array<T, 2>>::_valueLimits.second[1]);
   }
-
-  std::pair<T, T> _limitsA{std::numeric_limits<T>::min(),
-                           std::numeric_limits<T>::max()};
-
-  std::pair<T, T> _limitsB{std::numeric_limits<T>::min(),
-                           std::numeric_limits<T>::max()};
 
   void paintSpinBox() {}
 };
@@ -283,9 +287,8 @@ template <> inline void SpinBoxAB<int>::paintSpinBox() {
   int step{1};
   int step_fast{100};
   ImGuiInputTextFlags flags{0};
-  ImGui::InputScalarN(_label.c_str(), ImGuiDataType_S32,
-                      (void *)_currValue.data(), 2,
-                      (void *)(step > 0 ? &step : NULL),
+  ImGui::InputScalarN(_label.c_str(), ImGuiDataType_S32, (void *)_value.data(),
+                      2, (void *)(step > 0 ? &step : NULL),
                       (void *)(step_fast > 0 ? &step_fast : NULL), NULL, flags);
 }
 
@@ -297,23 +300,15 @@ public:
   Slider(const std::string &label = {}) : ValueElement<T>(label) {}
   // Destructor
   virtual ~Slider() override {}
-  // Value limits setter
-  inline void setValueLimits(const std::pair<T, T> &limits) {
-    _limits = limits;
-  }
 
 protected:
-  virtual void paintElement() override { paintSlider(); }
-
-  std::pair<T, T> _limits{std::numeric_limits<T>::min() / 2,
-                          std::numeric_limits<T>::max() / 2};
-
+  void paintElement() override final { paintSlider(); }
   void paintSlider() {}
 };
 
 template <> inline void Slider<int>::paintSlider() {
-  _changed = ImGui::SliderInt(_label.c_str(), &_currValue, _limits.first,
-                              _limits.second);
+  _changed = ImGui::SliderInt(_label.c_str(), &_value, _valueLimits.first,
+                              _valueLimits.second);
 }
 
 } // namespace ImWrap
