@@ -172,13 +172,13 @@ protected:
     _currIndex = _valueList.empty() ? -1 : _currIndex;
     if (_currIndex < 0) {
       // Value list IS empty
-      if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
+      if (ImGui::BeginCombo(IValueElement<T>::_label.c_str(),
                             _placeholder.c_str())) {
         ImGui::EndCombo();
       }
     } else {
       // Value list is NOT empty
-      if (ImGui::BeginCombo(ValueElement<T>::_label.c_str(),
+      if (ImGui::BeginCombo(IValueElement<T>::_label.c_str(),
                             _valueList.at(_currIndex).second.c_str())) {
         for (size_t i = 0; i != _valueList.size(); ++i) {
           if (ImGui::Selectable(_valueList[i].second.c_str(),
