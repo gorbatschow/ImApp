@@ -20,11 +20,16 @@ public:
   // Painter
   virtual void paint() {
     ImGui::PushID(this);
-    if (_sameLine)
+    if (_sameLine) {
       ImGui::SameLine(0.0f, _sameLineSpacing);
-    if (!std::isnan(_width))
-      ImGui::SetNextItemWidth(_width);
+    }
+    if (!std::isnan(_width)) {
+      ImGui::PushItemWidth(_width);
+    }
     paintElement();
+    if (!std::isnan(_width)) {
+      ImGui::PopItemWidth();
+    }
     ImGui::PopID();
   }
   // Handler
@@ -121,7 +126,9 @@ protected:
 class Button : public BasicElement {
 public:
   // Constructor
-  Button(const std::string &label = {}) : BasicElement(label) {}
+  Button(const std::string &label = {}) : BasicElement(label) {
+    _width = 50.0f;
+  }
   // Destructor
   virtual ~Button() override {}
   // Handler
@@ -135,7 +142,11 @@ protected:
   bool _triggered{false};
 
   void paintElement() override final {
-    _triggered = ImGui::Button(_label.c_str());
+    if (std::isnan(_width)) {
+      _triggered = ImGui::Button(_label.c_str());
+    } else {
+      _triggered = ImGui::Button(_label.c_str(), {_width, 0.0f});
+    }
   }
 };
 
