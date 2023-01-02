@@ -118,7 +118,10 @@ public:
   virtual ~Label() override {}
 
 protected:
-  void paintElement() override final { ImGui::Text("%s", _label.c_str()); }
+  void paintElement() override final {
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("%s", _label.c_str());
+  }
 };
 
 // Button
