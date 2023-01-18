@@ -1,5 +1,4 @@
 #include "ImApplication.h"
-#include "ImWrapper.h"
 #include <GLFW/glfw3.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -33,9 +32,8 @@ int ImApplication::run() {
 }
 // -----------------------------------------------------------------------------
 void ImApplication::paint() {
-  static auto helloLabel = ImWrap::Label("Hello World");
   ImGui::Begin("Welcome Window");
-  helloLabel.paint();
+  ImGui::Text("Hello World");
   ImGui::End();
 }
 // -----------------------------------------------------------------------------
