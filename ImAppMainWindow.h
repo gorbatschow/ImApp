@@ -3,10 +3,11 @@
 #include <string>
 class GLFWwindow;
 
-class ImApplication {
+namespace ImApp {
+class MainWindow {
 public:
-  ImApplication(const std::string &title = "ImApplication Window");
-  virtual ~ImApplication();
+  MainWindow(const std::string &title = "Main Window");
+  virtual ~MainWindow();
 
   int run();
 
@@ -30,3 +31,4 @@ private:
 
   static void onGlfwError(int error, const char *description) noexcept;
 };
+} // namespace ImApp

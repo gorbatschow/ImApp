@@ -1,4 +1,4 @@
-#include "ImApplication.h"
+#include "ImAppMainWindow.h"
 #include <GLFW/glfw3.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -16,13 +16,14 @@
 // io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset' and handle
 // ImDrawCmd::VtxOffset #define ImDrawIdx unsigned int
 
-ImApplication::ImApplication(const std::string &title) : _windowTitle(title) {
+namespace ImApp {
+MainWindow::MainWindow(const std::string &title) : _windowTitle(title) {
   init();
 }
 // -----------------------------------------------------------------------------
-ImApplication::~ImApplication() {}
+MainWindow::~MainWindow() {}
 // -----------------------------------------------------------------------------
-int ImApplication::run() {
+int MainWindow::run() {
   beforeLoop();
   loop();
   beforeQuit();
@@ -31,13 +32,13 @@ int ImApplication::run() {
   return 0;
 }
 // -----------------------------------------------------------------------------
-void ImApplication::paint() {
+void MainWindow::paint() {
   ImGui::Begin("Welcome Window");
   ImGui::Text("Hello World");
   ImGui::End();
 }
 // -----------------------------------------------------------------------------
-void ImApplication::init() {
+void MainWindow::init() {
   // Setup window
   glfwSetErrorCallback(onGlfwError);
   if (glfwInit() == 0) {
@@ -112,7 +113,7 @@ void ImApplication::init() {
       ImGui::GetIO().Fonts->GetGlyphRangesCyrillic());
 }
 // -----------------------------------------------------------------------------
-void ImApplication::loop() {
+void MainWindow::loop() {
   // Main loop
   while (glfwWindowShouldClose(_glfwWindow) == 0) {
     // Poll and handle events (inputs, window resize, etc.)
@@ -144,7 +145,7 @@ void ImApplication::loop() {
   }
 }
 // -----------------------------------------------------------------------------
-void ImApplication::quit() {
+void MainWindow::quit() {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
@@ -153,6 +154,8 @@ void ImApplication::quit() {
   glfwTerminate();
 }
 // -----------------------------------------------------------------------------
-void ImApplication::onGlfwError(int error, const char *description) noexcept {
+void MainWindow::onGlfwError(int error, const char *description) noexcept {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
+
+} // namespace ImApp
