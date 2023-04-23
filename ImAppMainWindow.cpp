@@ -25,7 +25,14 @@ MainWindow::~MainWindow() {}
 // -----------------------------------------------------------------------------
 int MainWindow::run() {
   beforeLoop();
-  loop();
+  frame();
+  firstPaint();
+  render();
+  while (glfwWindowShouldClose(_glfwWindow) == 0) {
+    frame();
+    paint();
+    render();
+  }
   beforeQuit();
   quit();
 
@@ -113,36 +120,34 @@ void MainWindow::init() {
       ImGui::GetIO().Fonts->GetGlyphRangesCyrillic());
 }
 // -----------------------------------------------------------------------------
-void MainWindow::loop() {
-  // Main loop
-  while (glfwWindowShouldClose(_glfwWindow) == 0) {
-    // Poll and handle events (inputs, window resize, etc.)
-    glfwPollEvents();
+void MainWindow::frame() {
+  // Poll and handle events (inputs, window resize, etc.)
+  glfwPollEvents();
 
-    // Start the Dear ImGui frame
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
+  // Start the Dear ImGui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
 
-    // Docking
-    constexpr ImGuiDockNodeFlags dockSpaceFlags =
-        ImGuiDockNodeFlags_PassthruCentralNode;
-    _dockSpaceId =
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockSpaceFlags);
-
-    // Paint GUI
-    paint();
-
-    // Rendering
-    ImGui::Render();
-    glfwGetFramebufferSize(_glfwWindow, &_displayW, &_displayH);
-    glViewport(0, 0, _displayW, _displayH);
-    glClearColor(_clearColor.x * _clearColor.w, _clearColor.y * _clearColor.w,
-                 _clearColor.z * _clearColor.w, _clearColor.w);
-    glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    glfwSwapBuffers(_glfwWindow);
-  }
+  // Docking
+  constexpr ImGuiDockNodeFlags dockSpaceFlags
+      = ImGuiDockNodeFlags_PassthruCentralNode;
+  _dockSpaceId = ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(),
+                                              dockSpaceFlags);
+}
+// -----------------------------------------------------------------------------
+void MainWindow::render() {
+  // Rendering
+  ImGui::Render();
+  glfwGetFramebufferSize(_glfwWindow, &_displayW, &_displayH);
+  glViewport(0, 0, _displayW, _displayH);
+  glClearColor(_clearColor.x * _clearColor.w,
+               _clearColor.y * _clearColor.w,
+               _clearColor.z * _clearColor.w,
+               _clearColor.w);
+  glClear(GL_COLOR_BUFFER_BIT);
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  glfwSwapBuffers(_glfwWindow);
 }
 // -----------------------------------------------------------------------------
 void MainWindow::quit() {

@@ -13,6 +13,7 @@ public:
 
 protected:
   virtual void beforeLoop() {}
+  virtual void firstPaint() {}
   virtual void paint();
   virtual void beforeQuit() {}
 
@@ -26,7 +27,8 @@ private:
   ImGuiID _dockSpaceId{};
 
   void init();
-  void loop();
+  void frame();
+  void render();
   void quit();
 
   static void onGlfwError(int error, const char *description) noexcept;
